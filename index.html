@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minecraft Server Dashboard</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 40px; }
+    .container { max-width: 800px; margin: 0 auto; background: #181825; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    h1 { margin-top: 0; color: #89b4fa; }
+    .card { background: #313244; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+    button { padding: 12px 24px; font-size: 16px; font-weight: bold; margin-right: 10px; margin-bottom: 10px; cursor: pointer; border: none; border-radius: 6px; transition: 0.2s; }
+    .btn-start { background: #a6e3a1; color: #11111b; }
+    .btn-stop { background: #f38ba8; color: #11111b; }
+    .btn-backup { background: #89b4fa; color: #11111b; }
+    button:hover { opacity: 0.85; }
+    select, input[type="file"] { padding: 10px; background: #45475a; color: #fff; border: 1px solid #585b70; border-radius: 6px; margin-bottom: 10px; }
+    #log { background: #11111b; padding: 15px; border-radius: 6px; font-family: monospace; color: #a6e3a1; min-height: 50px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Minecraft Server Control Panel</h1>
+    
+    <div class="card">
+      <h3>Server Power</h3>
+      <button class="btn-start" onclick="sendCommand('start')">▶ Start Server</button>
+      <button class="btn-stop" onclick="sendCommand('stop')">⏹ Stop Server</button>
+    </div>
+
+    <div class="card">
+      <h3>Backups & Restore</h3>
+      <button class="btn-backup" onclick="sendAction('/backup')">💾 Create Manual Backup</button>
+      <br><br>
+      <label>Restore Previous Backup:</label><br>
+      <select id="backupList"></select>
+      <button class="btn-backup" onclick="restoreSelectedBackup()">⏪ Restore</button>
+    </div>
+
+    <div class="card">
+      <h3>Install Texture Pack (.mcpack)</h3>
+      <input type="file" id="packFile" accept=".mcpack,.zip"><br>
+      <button class="btn-start" onclick="uploadPack()">📦 Upload & Install Pack</button>
+    </div>
+
+    <h3>Output Log</h3>
+    <div id="log">System Ready</div>
+  </div>
+
+  <script>
+    const LOG = document.getElementById('log');
+
+    async function sendCommand(action) {
+      LOG.innerText = `Executing ${action}...`;
+      const res = await fetch(`/api/control?action=${action}`);
+      const data = await res.json();
+      LOG.innerText = data.message || data.error;
+    }
+
+    async function sendAction(endpoint, body = {}) {
+      LOG.innerText = "Sending command to server...";
+      const res = await fetch(`/api/proxy?endpoint=${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      LOG.innerText = data.message || data.error;
+      loadBackups();
+    }
+
+    async function loadBackups() {
+      const res = await fetch('/api/proxy?endpoint=/backups');
+      const backups = await res.json();
+      const select = document.getElementById('backupList');
+      select.innerHTML = '';
+      if (Array.isArray(backups)) {
+        backups.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.hash;
+          opt.innerText = `${b.time} - ${b.message} (${b.hash})`;
+          select.appendChild(opt);
+        });
+      }
+    }
+
+    async function restoreSelectedBackup() {
+      const hash = document.getElementById('backupList').value;
+      if (hash && confirm(`Are you sure you want to restore the world to state ${hash}?`)) {
+        sendAction('/restore', { hash });
+      }
+    }
+
+    async function uploadPack() {
+      const fileInput = document.getElementById('packFile');
+      if (!fileInput.files[0]) return alert("Select a file first!");
+      
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      LOG.innerText = "Uploading pack...";
+      const res = await fetch('/api/proxy?endpoint=/upload-pack', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      LOG.innerText = data.message || data.error;
+    }
+
+    loadBackups();
+  </script>
+</body>
+</html>
