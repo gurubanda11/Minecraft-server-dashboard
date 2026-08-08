@@ -2,40 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minecraft Server Dashboard</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 40px; }
-    .container { max-width: 800px; margin: 0 auto; background: #181825; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-    h1 { margin-top: 0; color: #89b4fa; }
-    .card { background: #313244; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-    button { padding: 12px 24px; font-size: 16px; font-weight: bold; margin-right: 10px; margin-bottom: 10px; cursor: pointer; border: none; border-radius: 6px; transition: 0.2s; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; background: #181825; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    h1 { margin-top: 0; color: #89b4fa; text-align: center; }
+    .card { background: #313244; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
+    label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #181825; color: #fff; border: 1px solid #45475a; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; }
+    button { padding: 10px 20px; font-size: 15px; font-weight: bold; margin-right: 8px; margin-bottom: 8px; cursor: pointer; border: none; border-radius: 6px; transition: 0.2s; }
     .btn-start { background: #a6e3a1; color: #11111b; }
     .btn-stop { background: #f38ba8; color: #11111b; }
-    .btn-backup { background: #89b4fa; color: #11111b; }
+    .btn-action { background: #89b4fa; color: #11111b; }
     button:hover { opacity: 0.85; }
-    select, input[type="file"] { padding: 10px; background: #45475a; color: #fff; border: 1px solid #585b70; border-radius: 6px; margin-bottom: 10px; }
-    #log { background: #11111b; padding: 15px; border-radius: 6px; font-family: monospace; color: #a6e3a1; min-height: 50px; }
+    #log { background: #11111b; padding: 15px; border-radius: 6px; font-family: monospace; color: #a6e3a1; min-height: 40px; word-break: break-all; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Minecraft Server Control Panel</h1>
+    <h1>Minecraft Server Dashboard</h1>
+
+    <!-- Configuration Settings -->
+    <div class="card">
+      <h3>Credentials & Target</h3>
+      <label>Codespace Name:</label>
+      <input type="text" id="codespaceName" placeholder="e.g. ideal-space-game-12345678">
+      
+      <label>GitHub Personal Access Token (PAT):</label>
+      <input type="password" id="githubToken" placeholder="github_pat_...">
+      <button class="btn-action" onclick="saveCredentials()">💾 Save Config to Browser</button>
+    </div>
     
+    <!-- Power Control -->
     <div class="card">
       <h3>Server Power</h3>
-      <button class="btn-start" onclick="sendCommand('start')">▶ Start Server</button>
-      <button class="btn-stop" onclick="sendCommand('stop')">⏹ Stop Server</button>
+      <button class="btn-start" onclick="controlCodespace('start')">▶ Start Server</button>
+      <button class="btn-stop" onclick="controlCodespace('stop')">⏹ Stop Server</button>
     </div>
 
+    <!-- Backups -->
     <div class="card">
       <h3>Backups & Restore</h3>
-      <button class="btn-backup" onclick="sendAction('/backup')">💾 Create Manual Backup</button>
+      <button class="btn-action" onclick="callControlServer('/backup', 'POST')">💾 Create Manual Backup</button>
+      <button class="btn-action" onclick="loadBackups()">🔄 Refresh Backup List</button>
       <br><br>
-      <label>Restore Previous Backup:</label><br>
+      <label>Select Backup to Restore:</label>
       <select id="backupList"></select>
-      <button class="btn-backup" onclick="restoreSelectedBackup()">⏪ Restore</button>
+      <button class="btn-stop" onclick="restoreBackup()">⏪ Restore Selected World</button>
     </div>
 
+    <!-- Texture Pack Upload -->
     <div class="card">
       <h3>Install Texture Pack (.mcpack)</h3>
       <input type="file" id="packFile" accept=".mcpack,.zip"><br>
@@ -43,34 +60,80 @@
     </div>
 
     <h3>Output Log</h3>
-    <div id="log">System Ready</div>
+    <div id="log">Ready</div>
   </div>
 
   <script>
     const LOG = document.getElementById('log');
 
-    async function sendCommand(action) {
-      LOG.innerText = `Executing ${action}...`;
-      const res = await fetch(`/api/control?action=${action}`);
-      const data = await res.json();
-      LOG.innerText = data.message || data.error;
+    // Load saved settings on startup
+    window.onload = () => {
+      if (localStorage.getItem('cs_name')) document.getElementById('codespaceName').value = localStorage.getItem('cs_name');
+      if (localStorage.getItem('gh_token')) document.getElementById('githubToken').value = localStorage.getItem('gh_token');
+    };
+
+    function saveCredentials() {
+      localStorage.setItem('cs_name', document.getElementById('codespaceName').value.trim());
+      localStorage.setItem('gh_token', document.getElementById('githubToken').value.trim());
+      LOG.innerText = "Credentials saved locally in your browser!";
     }
 
-    async function sendAction(endpoint, body = {}) {
-      LOG.innerText = "Sending command to server...";
-      const res = await fetch(`/api/proxy?endpoint=${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      LOG.innerText = data.message || data.error;
-      loadBackups();
+    function getControlUrl() {
+      const csName = document.getElementById('codespaceName').value.trim();
+      return `https://${csName}-8080.app.github.dev`;
+    }
+
+    async function controlCodespace(action) {
+      const token = document.getElementById('githubToken').value.trim();
+      const csName = document.getElementById('codespaceName').value.trim();
+
+      if (!token || !csName) return alert("Please enter both your Codespace Name and GitHub Token!");
+
+      LOG.innerText = `Sending ${action} command to GitHub API...`;
+
+      try {
+        const res = await fetch(`https://api.github.com/user/codespaces/${csName}/${action}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
+        });
+
+        if (res.ok) {
+          LOG.innerText = `Success: Codespace command '${action}' executed!`;
+        } else {
+          const err = await res.json();
+          LOG.innerText = `Error (${res.status}): ${err.message || 'Failed to execute command'}`;
+        }
+      } catch (e) {
+        LOG.innerText = `Network Error: ${e.message}`;
+      }
+    }
+
+    async function callControlServer(endpoint, method = 'GET', body = null) {
+      const baseUrl = getControlUrl();
+      LOG.innerText = `Connecting to server at ${endpoint}...`;
+
+      try {
+        const options = { method, headers: {} };
+        if (body) {
+          options.headers['Content-Type'] = 'application/json';
+          options.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(`${baseUrl}${endpoint}`, options);
+        const data = await res.json();
+        LOG.innerText = data.message || JSON.stringify(data);
+        return data;
+      } catch (e) {
+        LOG.innerText = "Server is offline or port 8080 is not set to Public.";
+      }
     }
 
     async function loadBackups() {
-      const res = await fetch('/api/proxy?endpoint=/backups');
-      const backups = await res.json();
+      const backups = await callControlServer('/backups');
       const select = document.getElementById('backupList');
       select.innerHTML = '';
       if (Array.isArray(backups)) {
@@ -83,30 +146,32 @@
       }
     }
 
-    async function restoreSelectedBackup() {
+    async function restoreBackup() {
       const hash = document.getElementById('backupList').value;
-      if (hash && confirm(`Are you sure you want to restore the world to state ${hash}?`)) {
-        sendAction('/restore', { hash });
+      if (hash && confirm(`Are you sure you want to revert the world to commit ${hash}?`)) {
+        await callControlServer('/restore', 'POST', { hash });
       }
     }
 
     async function uploadPack() {
       const fileInput = document.getElementById('packFile');
-      if (!fileInput.files[0]) return alert("Select a file first!");
-      
+      if (!fileInput.files[0]) return alert("Select a .mcpack or .zip file first!");
+
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
 
-      LOG.innerText = "Uploading pack...";
-      const res = await fetch('/api/proxy?endpoint=/upload-pack', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      LOG.innerText = data.message || data.error;
+      LOG.innerText = "Uploading texture pack to Codespace...";
+      try {
+        const res = await fetch(`${getControlUrl()}/upload-pack`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        LOG.innerText = data.message || "Upload complete!";
+      } catch (e) {
+        LOG.innerText = `Upload Error: ${e.message}`;
+      }
     }
-
-    loadBackups();
   </script>
 </body>
 </html>
