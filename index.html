@@ -390,6 +390,84 @@
         log(`Network Error: ${e.message}`);
       }
     }
+
+    // --- BACKUP & FILE SYSTEM FUNCTIONS --- //
+
+    async function triggerManualBackup() {
+      log("Triggering manual backup...");
+      try {
+        const res = await fetch(`${getControlUrl()}/backup`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          log("Backup success: " + data.message);
+          alert("Backup triggered successfully!");
+          loadBackups(); // Auto-refresh the list
+        } else {
+          log("Backup failed. Ensure Codespace is running and Port 8080 is Public.");
+        }
+      } catch (e) {
+        log(`Backup Error: ${e.message}`);
+      }
+    }
+
+    async function loadBackups() {
+      log("Fetching backup history...");
+      try {
+        const res = await fetch(`${getControlUrl()}/backups`);
+        if (res.ok) {
+          const backups = await res.json();
+          const select = document.getElementById('backupList');
+          select.innerHTML = ''; // Clear current list
+          
+          if (backups.length === 0) {
+              const opt = document.createElement('option');
+              opt.innerText = "No backups found.";
+              select.appendChild(opt);
+              return;
+          }
+
+          backups.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.hash;
+            opt.innerText = `${b.message} (${b.time})`;
+            select.appendChild(opt);
+          });
+          log(`Loaded ${backups.length} backups.`);
+        }
+      } catch (e) {
+        log(`Load Backups Error: ${e.message}`);
+      }
+    }
+
+    async function restoreSelectedBackup() {
+      const select = document.getElementById('backupList');
+      const hash = select.value;
+      
+      if (!hash || hash === "No backups found.") return alert("No valid backup selected!");
+      if (!confirm(`Are you sure you want to restore to commit ${hash}? Any unsaved progress since this backup will be lost!`)) return;
+
+      log(`Restoring world to backup ${hash}...`);
+      try {
+        const res = await fetch(`${getControlUrl()}/restore`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash: hash })
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          log("Restore success: " + data.message);
+          alert(data.message + " You may need to restart the server.");
+        }
+      } catch (e) {
+        log(`Restore Error: ${e.message}`);
+      }
+    }
+
+    function uploadPack() {
+      alert("Texture Pack uploading requires a backend update. Feature coming soon!");
+      log("Upload feature triggered, but backend endpoint does not exist yet.");
+    }
   </script>
 </body>
 </html>
