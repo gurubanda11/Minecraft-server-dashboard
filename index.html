@@ -29,16 +29,13 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-main); color: #333; height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-    /* Top Navigation Bar */
     .topbar { background: var(--topbar-bg); color: var(--text-light); height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 2px solid #14161b; }
     .brand { font-size: 20px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; color: #fff; }
     .brand i { color: var(--btn-blue); font-size: 24px; }
     .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 14px; color: var(--text-muted); }
 
-    /* App Container */
     .app-container { display: flex; flex: 1; height: calc(100vh - 50px); }
 
-    /* Sidebar Navigation */
     .sidebar { width: 230px; background: var(--sidebar-bg); display: flex; flex-direction: column; border-right: 1px solid #1f232b; flex-shrink: 0; }
     .server-card { padding: 15px; background: #1f232b; border-bottom: 1px solid #14161b; display: flex; align-items: center; gap: 10px; }
     .server-card .indicator { width: 12px; height: 12px; border-radius: 50%; background: var(--status-offline); display: inline-block; }
@@ -50,21 +47,17 @@
     .nav-item.active { background: var(--sidebar-active); color: #fff; border-left-color: var(--btn-blue); }
     .nav-item i { width: 18px; text-align: center; }
 
-    /* Main Content Area */
     .content-area { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
     .tab-content { display: none; flex-direction: column; gap: 20px; }
     .tab-content.active { display: flex; }
 
-    /* Server Domain Banner */
     .domain-banner { text-align: center; font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
 
-    /* Status Bar */
     .status-bar { width: 100%; padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #fff; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
     .status-bar.offline { background: var(--status-offline); }
     .status-bar.online { background: var(--status-online); }
     .status-bar.starting { background: var(--status-starting); color: #2c3e50; }
 
-    /* Big Action Button */
     .action-container { display: flex; justify-content: center; margin: 10px 0; }
     .btn-main { padding: 16px 50px; font-size: 22px; font-weight: bold; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .btn-main.start { background: var(--btn-green); }
@@ -73,7 +66,6 @@
     .btn-main.stop:hover { background: var(--btn-red-hover); }
     .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Server Details Grid */
     .server-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
     .preview-box { background: var(--card-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--btn-blue); }
     .preview-box i { font-size: 90px; }
@@ -83,21 +75,18 @@
     .info-header { background: var(--card-accent); padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
     .info-body { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-light); font-weight: bold; font-size: 15px; }
     .btn-small { padding: 6px 12px; background: var(--btn-blue); color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
-    .btn-small:hover { opacity: 0.9; }
 
-    /* Generic Cards for Sub-pages */
     .card { background: var(--card-bg); color: var(--text-light); padding: 20px; border-radius: 6px; display: flex; flex-direction: column; gap: 15px; }
     .card h3 { border-bottom: 1px solid var(--card-accent); padding-bottom: 10px; color: var(--btn-blue); font-size: 18px; }
     label { font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 4px; display: block; }
     input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #1e222a; border: 1px solid var(--card-accent); border-radius: 4px; color: #fff; font-size: 14px; }
     
-    /* Console / Log */
-    .log-box { background: #14161b; color: #2ecc71; padding: 15px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; font-size: 13px; min-height: 100px; max-height: 200px; overflow-y: auto; border: 1px solid var(--card-accent); word-break: break-all; }
+    .console-box { background: #0c0d10; color: #00ff66; padding: 15px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; font-size: 13px; height: 420px; overflow-y: auto; border: 1px solid #1f232b; white-space: pre-wrap; word-break: break-all; line-height: 1.4; }
+    .log-box { background: #14161b; color: #2ecc71; padding: 12px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; font-size: 12px; max-height: 100px; overflow-y: auto; border: 1px solid var(--card-accent); }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
   <header class="topbar">
     <div class="brand">
       <i class="fa-solid fa-cube"></i> ATERNOS
@@ -109,38 +98,34 @@
 
   <div class="app-container">
     
-    <!-- Sidebar -->
     <nav class="sidebar">
       <div class="server-card">
         <span class="indicator" id="sidebarStatusDot"></span>
-        <span class="server-name" id="sidebarServerName">digbicks.ply.gg</span>
+        <span class="server-name" id="sidebarServerName">atoms-flexibility.tun.ply.gg</span>
       </div>
       <ul class="nav-list">
         <li class="nav-item active" onclick="switchTab('server', this)"><i class="fa-solid fa-server"></i> Server</li>
+        <li class="nav-item" onclick="switchTab('console', this)"><i class="fa-solid fa-terminal"></i> Console</li>
         <li class="nav-item" onclick="switchTab('options', this)"><i class="fa-solid fa-sliders"></i> Options</li>
         <li class="nav-item" onclick="switchTab('backups', this)"><i class="fa-solid fa-clock-rotate-left"></i> Backups</li>
         <li class="nav-item" onclick="switchTab('files', this)"><i class="fa-solid fa-folder-open"></i> Texture Packs</li>
       </ul>
     </nav>
 
-    <!-- Main Content Area -->
     <main class="content-area">
 
       <!-- SERVER TAB -->
       <div id="tab-server" class="tab-content active">
-        <div class="domain-banner" id="displayDomain">digbicks.ply.gg</div>
+        <div class="domain-banner" id="displayDomain">atoms-flexibility.tun.ply.gg</div>
 
-        <!-- Status Bar -->
         <div id="statusBar" class="status-bar offline">Offline</div>
 
-        <!-- Start / Stop Button -->
         <div class="action-container">
           <button id="mainBtn" class="btn-main start" onclick="handlePowerAction()">
             <i class="fa-solid fa-power-off"></i> <span id="mainBtnText">Start</span>
           </button>
         </div>
 
-        <!-- Info Grid -->
         <div class="server-grid">
           <div class="preview-box">
             <i class="fa-solid fa-cubes"></i>
@@ -149,14 +134,14 @@
             <div class="info-item">
               <div class="info-header"><i class="fa-solid fa-network-wired"></i> Address</div>
               <div class="info-body">
-                <span id="infoAddress">digbicks.ply.gg</span>
+                <span id="infoAddress">atoms-flexibility.tun.ply.gg</span>
                 <button class="btn-small" onclick="copyText('infoAddress')"><i class="fa-solid fa-copy"></i> Copy</button>
               </div>
             </div>
             <div class="info-item">
               <div class="info-header"><i class="fa-solid fa-plug"></i> Port</div>
               <div class="info-body">
-                <span id="infoPort">19132</span>
+                <span id="infoPort">55618</span>
                 <button class="btn-small" onclick="copyText('infoPort')"><i class="fa-solid fa-copy"></i> Copy</button>
               </div>
             </div>
@@ -176,6 +161,14 @@
         </div>
       </div>
 
+      <!-- CONSOLE TAB -->
+      <div id="tab-console" class="tab-content">
+        <div class="card">
+          <h3><i class="fa-solid fa-terminal"></i> Live Server Terminal</h3>
+          <div id="consoleBox" class="console-box">Connecting to server log output...</div>
+        </div>
+      </div>
+
       <!-- OPTIONS TAB -->
       <div id="tab-options" class="tab-content">
         <div class="card">
@@ -190,11 +183,11 @@
           </div>
           <div>
             <label>Public Playit Address:</label>
-            <input type="text" id="playitAddress" placeholder="e.g. digbicks.ply.gg">
+            <input type="text" id="playitAddress" placeholder="e.g. atoms-flexibility.tun.ply.gg">
           </div>
           <div>
             <label>Public Playit Port:</label>
-            <input type="text" id="playitPort" placeholder="e.g. 19132">
+            <input type="text" id="playitPort" placeholder="e.g. 55618">
           </div>
           <button class="btn-small" style="padding:12px;" onclick="saveConfig()"><i class="fa-solid fa-floppy-disk"></i> Save Configuration</button>
         </div>
@@ -222,9 +215,8 @@
         </div>
       </div>
 
-      <!-- Log / Console Banner -->
       <div class="card" style="padding: 15px;">
-        <label><i class="fa-solid fa-terminal"></i> Activity Log</label>
+        <label><i class="fa-solid fa-info-circle"></i> System Log</label>
         <div id="log" class="log-box">System Initialized.</div>
       </div>
 
@@ -233,6 +225,7 @@
 
   <script>
     let currentState = 'Shutdown';
+    let autoScrollConsole = true;
 
     window.onload = () => {
       if (localStorage.getItem('cs_name')) document.getElementById('codespaceName').value = localStorage.getItem('cs_name');
@@ -247,7 +240,9 @@
       }
 
       pollState();
+      fetchConsoleLogs();
       setInterval(pollState, 10000);
+      setInterval(fetchConsoleLogs, 2000);
     };
 
     function log(msg) {
@@ -278,7 +273,7 @@
     }
 
     function updateAddressDisplay(addr) {
-      const display = addr || 'digbicks.ply.gg';
+      const display = addr || 'atoms-flexibility.tun.ply.gg';
       document.getElementById('displayDomain').innerText = display;
       document.getElementById('infoAddress').innerText = display;
       document.getElementById('sidebarServerName').innerText = display;
@@ -288,6 +283,32 @@
       const text = document.getElementById(id).innerText;
       navigator.clipboard.writeText(text);
       log(`Copied '${text}' to clipboard!`);
+    }
+
+    function getControlUrl() {
+      const csName = localStorage.getItem('cs_name');
+      return `https://${csName}-8080.app.github.dev`;
+    }
+
+    async function fetchConsoleLogs() {
+      const csName = localStorage.getItem('cs_name');
+      if (!csName) return;
+
+      try {
+        const res = await fetch(`${getControlUrl()}/logs`);
+        if (res.ok) {
+          const data = await res.json();
+          const box = document.getElementById('consoleBox');
+          if (data.log) {
+            box.innerText = data.log;
+            if (autoScrollConsole) {
+              box.scrollTop = box.scrollHeight;
+            }
+          }
+        }
+      } catch (e) {
+        // Control server offline
+      }
     }
 
     async function getCodespaceState() {
@@ -367,73 +388,6 @@
         }
       } catch (e) {
         log(`Network Error: ${e.message}`);
-      }
-    }
-
-    function getControlUrl() {
-      const csName = localStorage.getItem('cs_name');
-      return `https://${csName}-8080.app.github.dev`;
-    }
-
-    async function callControlServer(endpoint, method = 'GET', body = null) {
-      const baseUrl = getControlUrl();
-      log(`Connecting to control engine at ${endpoint}...`);
-
-      try {
-        const options = { method, headers: {} };
-        if (body) {
-          options.headers['Content-Type'] = 'application/json';
-          options.body = JSON.stringify(body);
-        }
-
-        const res = await fetch(`${baseUrl}${endpoint}`, options);
-        const data = await res.json();
-        log(data.message || "Request successful");
-        return data;
-      } catch (e) {
-        log("Control server offline or port 8080 is not set to Public.");
-      }
-    }
-
-    async function triggerManualBackup() {
-      await callControlServer('/backup', 'POST');
-    }
-
-    async function loadBackups() {
-      const backups = await callControlServer('/backups');
-      const select = document.getElementById('backupList');
-      select.innerHTML = '';
-      if (Array.isArray(backups)) {
-        backups.forEach(b => {
-          const opt = document.createElement('option');
-          opt.value = b.hash;
-          opt.innerText = `${b.time} - ${b.message} (${b.hash})`;
-          select.appendChild(opt);
-        });
-      }
-    }
-
-    async function restoreSelectedBackup() {
-      const hash = document.getElementById('backupList').value;
-      if (hash && confirm(`Revert world to commit ${hash}?`)) {
-        await callControlServer('/restore', 'POST', { hash });
-      }
-    }
-
-    async function uploadPack() {
-      const fileInput = document.getElementById('packFile');
-      if (!fileInput.files[0]) return alert("Select a file first!");
-
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-
-      log("Uploading pack to server...");
-      try {
-        const res = await fetch(`${getControlUrl()}/upload-pack`, { method: 'POST', body: formData });
-        const data = await res.json();
-        log(data.message || "Upload complete!");
-      } catch (e) {
-        log(`Upload Error: ${e.message}`);
       }
     }
   </script>
