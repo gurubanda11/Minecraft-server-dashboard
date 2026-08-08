@@ -83,13 +83,49 @@
       return `https://${csName}-8080.app.github.dev`;
     }
 
+  async function getCodespaceState() {
+      const token = document.getElementById('githubToken').value.trim();
+      const csName = document.getElementById('codespaceName').value.trim();
+
+      const res = await fetch(`https://api.github.com/user/codespaces/${csName}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.state;
+      }
+      return 'Unknown';
+    }
+
     async function controlCodespace(action) {
       const token = document.getElementById('githubToken').value.trim();
       const csName = document.getElementById('codespaceName').value.trim();
 
       if (!token || !csName) return alert("Please enter both your Codespace Name and GitHub Token!");
 
-      LOG.innerText = `Sending ${action} command to GitHub API...`;
+      LOG.innerText = `Checking server state...`;
+      let currentState = await getCodespaceState();
+
+      if (action === 'start' && currentState !== 'Shutdown') {
+        if (currentState === 'Available') {
+          LOG.innerText = "Server is already running!";
+          return;
+        }
+        LOG.innerText = `Server state: '${currentState}'. Waiting for clean shutdown...`;
+        
+        while (currentState !== 'Shutdown') {
+          await new Promise(r => setTimeout(r, 5000));
+          currentState = await getCodespaceState();
+          LOG.innerText = `Server state: ${currentState}...`;
+        }
+      }
+
+      LOG.innerText = `Sending '${action}' command to GitHub API...`;
 
       try {
         const res = await fetch(`https://api.github.com/user/codespaces/${csName}/${action}`, {
@@ -102,7 +138,7 @@
         });
 
         if (res.ok) {
-          LOG.innerText = `Success: Codespace command '${action}' executed!`;
+          LOG.innerText = `Success: Server ${action} command sent! Give it 30s to finish booting.`;
         } else {
           const err = await res.json();
           LOG.innerText = `Error (${res.status}): ${err.message || 'Failed to execute command'}`;
