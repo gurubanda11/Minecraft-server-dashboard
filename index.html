@@ -3,129 +3,350 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minecraft Server Dashboard</title>
+  <title>Aternos | Minecraft Server Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 20px; }
-    .container { max-width: 700px; margin: 0 auto; background: #181825; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-    h1 { margin-top: 0; color: #89b4fa; text-align: center; }
-    .card { background: #313244; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
-    label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; }
-    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #181825; color: #fff; border: 1px solid #45475a; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; }
-    button { padding: 10px 20px; font-size: 15px; font-weight: bold; margin-right: 8px; margin-bottom: 8px; cursor: pointer; border: none; border-radius: 6px; transition: 0.2s; }
-    .btn-start { background: #a6e3a1; color: #11111b; }
-    .btn-stop { background: #f38ba8; color: #11111b; }
-    .btn-action { background: #89b4fa; color: #11111b; }
-    button:hover { opacity: 0.85; }
-    #log { background: #11111b; padding: 15px; border-radius: 6px; font-family: monospace; color: #a6e3a1; min-height: 40px; word-break: break-all; }
+    :root {
+      --bg-main: #e9ecef;
+      --sidebar-bg: #272c36;
+      --sidebar-hover: #1f232b;
+      --sidebar-active: #181b21;
+      --topbar-bg: #1f232b;
+      --card-bg: #2f3542;
+      --card-accent: #3a4150;
+      --status-offline: #e74c3c;
+      --status-online: #2ecc71;
+      --status-starting: #f1c40f;
+      --btn-green: #2ecc71;
+      --btn-green-hover: #27ae60;
+      --btn-red: #e74c3c;
+      --btn-red-hover: #c0392b;
+      --btn-blue: #3498db;
+      --text-light: #f1f2f6;
+      --text-muted: #a4b0be;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-main); color: #333; height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+    /* Top Navigation Bar */
+    .topbar { background: var(--topbar-bg); color: var(--text-light); height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 2px solid #14161b; }
+    .brand { font-size: 20px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; color: #fff; }
+    .brand i { color: var(--btn-blue); font-size: 24px; }
+    .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 14px; color: var(--text-muted); }
+
+    /* App Container */
+    .app-container { display: flex; flex: 1; height: calc(100vh - 50px); }
+
+    /* Sidebar Navigation */
+    .sidebar { width: 230px; background: var(--sidebar-bg); display: flex; flex-direction: column; border-right: 1px solid #1f232b; flex-shrink: 0; }
+    .server-card { padding: 15px; background: #1f232b; border-bottom: 1px solid #14161b; display: flex; align-items: center; gap: 10px; }
+    .server-card .indicator { width: 12px; height: 12px; border-radius: 50%; background: var(--status-offline); display: inline-block; }
+    .server-card .server-name { font-weight: bold; color: var(--text-light); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .nav-list { list-style: none; margin-top: 10px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.15s; border-left: 4px solid transparent; }
+    .nav-item:hover { background: var(--sidebar-hover); color: var(--text-light); }
+    .nav-item.active { background: var(--sidebar-active); color: #fff; border-left-color: var(--btn-blue); }
+    .nav-item i { width: 18px; text-align: center; }
+
+    /* Main Content Area */
+    .content-area { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .tab-content { display: none; flex-direction: column; gap: 20px; }
+    .tab-content.active { display: flex; }
+
+    /* Server Domain Banner */
+    .domain-banner { text-align: center; font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+
+    /* Status Bar */
+    .status-bar { width: 100%; padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #fff; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
+    .status-bar.offline { background: var(--status-offline); }
+    .status-bar.online { background: var(--status-online); }
+    .status-bar.starting { background: var(--status-starting); color: #2c3e50; }
+
+    /* Big Action Button */
+    .action-container { display: flex; justify-content: center; margin: 10px 0; }
+    .btn-main { padding: 16px 50px; font-size: 22px; font-weight: bold; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .btn-main.start { background: var(--btn-green); }
+    .btn-main.start:hover { background: var(--btn-green-hover); }
+    .btn-main.stop { background: var(--btn-red); }
+    .btn-main.stop:hover { background: var(--btn-red-hover); }
+    .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Server Details Grid */
+    .server-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+    .preview-box { background: var(--card-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--btn-blue); }
+    .preview-box i { font-size: 90px; }
+
+    .info-list { display: flex; flex-direction: column; gap: 10px; }
+    .info-item { background: var(--card-bg); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
+    .info-header { background: var(--card-accent); padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+    .info-body { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-light); font-weight: bold; font-size: 15px; }
+    .btn-small { padding: 6px 12px; background: var(--btn-blue); color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
+    .btn-small:hover { opacity: 0.9; }
+
+    /* Generic Cards for Sub-pages */
+    .card { background: var(--card-bg); color: var(--text-light); padding: 20px; border-radius: 6px; display: flex; flex-direction: column; gap: 15px; }
+    .card h3 { border-bottom: 1px solid var(--card-accent); padding-bottom: 10px; color: var(--btn-blue); font-size: 18px; }
+    label { font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #1e222a; border: 1px solid var(--card-accent); border-radius: 4px; color: #fff; font-size: 14px; }
+    
+    /* Console / Log */
+    .log-box { background: #14161b; color: #2ecc71; padding: 15px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; font-size: 13px; min-height: 100px; max-height: 200px; overflow-y: auto; border: 1px solid var(--card-accent); word-break: break-all; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Minecraft Server Dashboard</h1>
 
-    <!-- Configuration Settings -->
-    <div class="card">
-      <h3>Credentials & Target</h3>
-      <label>Codespace Name:</label>
-      <input type="text" id="codespaceName" placeholder="e.g. ideal-space-game-12345678">
-      
-      <label>GitHub Personal Access Token (PAT):</label>
-      <input type="password" id="githubToken" placeholder="github_pat_...">
-      <button class="btn-action" onclick="saveCredentials()">💾 Save Config to Browser</button>
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <i class="fa-solid fa-cube"></i> ATERNOS
     </div>
+    <div class="topbar-right">
+      <span><i class="fa-solid fa-server"></i> Server Control Panel</span>
+    </div>
+  </header>
+
+  <div class="app-container">
     
-    <!-- Power Control -->
-    <div class="card">
-      <h3>Server Power</h3>
-      <button class="btn-start" onclick="controlCodespace('start')">▶ Start Server</button>
-      <button class="btn-stop" onclick="controlCodespace('stop')">⏹ Stop Server</button>
-    </div>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="server-card">
+        <span class="indicator" id="sidebarStatusDot"></span>
+        <span class="server-name" id="sidebarServerName">digbicks.ply.gg</span>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item active" onclick="switchTab('server', this)"><i class="fa-solid fa-server"></i> Server</li>
+        <li class="nav-item" onclick="switchTab('options', this)"><i class="fa-solid fa-sliders"></i> Options</li>
+        <li class="nav-item" onclick="switchTab('backups', this)"><i class="fa-solid fa-clock-rotate-left"></i> Backups</li>
+        <li class="nav-item" onclick="switchTab('files', this)"><i class="fa-solid fa-folder-open"></i> Texture Packs</li>
+      </ul>
+    </nav>
 
-    <!-- Backups -->
-    <div class="card">
-      <h3>Backups & Restore</h3>
-      <button class="btn-action" onclick="callControlServer('/backup', 'POST')">💾 Create Manual Backup</button>
-      <button class="btn-action" onclick="loadBackups()">🔄 Refresh Backup List</button>
-      <br><br>
-      <label>Select Backup to Restore:</label>
-      <select id="backupList"></select>
-      <button class="btn-stop" onclick="restoreBackup()">⏪ Restore Selected World</button>
-    </div>
+    <!-- Main Content Area -->
+    <main class="content-area">
 
-    <!-- Texture Pack Upload -->
-    <div class="card">
-      <h3>Install Texture Pack (.mcpack)</h3>
-      <input type="file" id="packFile" accept=".mcpack,.zip"><br>
-      <button class="btn-start" onclick="uploadPack()">📦 Upload & Install Pack</button>
-    </div>
+      <!-- SERVER TAB -->
+      <div id="tab-server" class="tab-content active">
+        <div class="domain-banner" id="displayDomain">digbicks.ply.gg</div>
 
-    <h3>Output Log</h3>
-    <div id="log">Ready</div>
+        <!-- Status Bar -->
+        <div id="statusBar" class="status-bar offline">Offline</div>
+
+        <!-- Start / Stop Button -->
+        <div class="action-container">
+          <button id="mainBtn" class="btn-main start" onclick="handlePowerAction()">
+            <i class="fa-solid fa-power-off"></i> <span id="mainBtnText">Start</span>
+          </button>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="server-grid">
+          <div class="preview-box">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+          <div class="info-list">
+            <div class="info-item">
+              <div class="info-header"><i class="fa-solid fa-network-wired"></i> Address</div>
+              <div class="info-body">
+                <span id="infoAddress">digbicks.ply.gg</span>
+                <button class="btn-small" onclick="copyText('infoAddress')"><i class="fa-solid fa-copy"></i> Copy</button>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-header"><i class="fa-solid fa-plug"></i> Port</div>
+              <div class="info-body">
+                <span id="infoPort">19132</span>
+                <button class="btn-small" onclick="copyText('infoPort')"><i class="fa-solid fa-copy"></i> Copy</button>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-header"><i class="fa-solid fa-gear"></i> Software</div>
+              <div class="info-body">
+                <span>Bedrock Dedicated Server</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-header"><i class="fa-solid fa-code-branch"></i> Version</div>
+              <div class="info-body">
+                <span>Latest (Auto-Updating)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTIONS TAB -->
+      <div id="tab-options" class="tab-content">
+        <div class="card">
+          <h3><i class="fa-solid fa-key"></i> Credentials & Configuration</h3>
+          <div>
+            <label>Codespace Name:</label>
+            <input type="text" id="codespaceName" placeholder="e.g. ideal-space-game-12345678">
+          </div>
+          <div>
+            <label>GitHub Personal Access Token (PAT):</label>
+            <input type="password" id="githubToken" placeholder="ghp_...">
+          </div>
+          <div>
+            <label>Public Playit Address:</label>
+            <input type="text" id="playitAddress" placeholder="e.g. digbicks.ply.gg">
+          </div>
+          <div>
+            <label>Public Playit Port:</label>
+            <input type="text" id="playitPort" placeholder="e.g. 19132">
+          </div>
+          <button class="btn-small" style="padding:12px;" onclick="saveConfig()"><i class="fa-solid fa-floppy-disk"></i> Save Configuration</button>
+        </div>
+      </div>
+
+      <!-- BACKUPS TAB -->
+      <div id="tab-backups" class="tab-content">
+        <div class="card">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> World Backups</h3>
+          <button class="btn-small" style="padding:12px; background:var(--btn-green);" onclick="triggerManualBackup()"><i class="fa-solid fa-plus"></i> Create Manual Backup</button>
+          <button class="btn-small" style="padding:12px;" onclick="loadBackups()"><i class="fa-solid fa-arrows-rotate"></i> Refresh Backup List</button>
+          <hr style="border-color:var(--card-accent)">
+          <label>Restore Previous World Commit:</label>
+          <select id="backupList"></select>
+          <button class="btn-small" style="padding:12px; background:var(--btn-red);" onclick="restoreSelectedBackup()"><i class="fa-solid fa-rotate-left"></i> Restore Selected Backup</button>
+        </div>
+      </div>
+
+      <!-- FILES TAB -->
+      <div id="tab-files" class="tab-content">
+        <div class="card">
+          <h3><i class="fa-solid fa-box-open"></i> Texture Pack Installer (.mcpack / .zip)</h3>
+          <input type="file" id="packFile" accept=".mcpack,.zip">
+          <button class="btn-small" style="padding:12px; background:var(--btn-green);" onclick="uploadPack()"><i class="fa-solid fa-upload"></i> Upload & Install Pack</button>
+        </div>
+      </div>
+
+      <!-- Log / Console Banner -->
+      <div class="card" style="padding: 15px;">
+        <label><i class="fa-solid fa-terminal"></i> Activity Log</label>
+        <div id="log" class="log-box">System Initialized.</div>
+      </div>
+
+    </main>
   </div>
 
   <script>
-    const LOG = document.getElementById('log');
+    let currentState = 'Shutdown';
 
-    // Load saved settings on startup
     window.onload = () => {
       if (localStorage.getItem('cs_name')) document.getElementById('codespaceName').value = localStorage.getItem('cs_name');
       if (localStorage.getItem('gh_token')) document.getElementById('githubToken').value = localStorage.getItem('gh_token');
+      if (localStorage.getItem('playit_addr')) {
+        document.getElementById('playitAddress').value = localStorage.getItem('playit_addr');
+        updateAddressDisplay(localStorage.getItem('playit_addr'));
+      }
+      if (localStorage.getItem('playit_port')) {
+        document.getElementById('playitPort').value = localStorage.getItem('playit_port');
+        document.getElementById('infoPort').innerText = localStorage.getItem('playit_port');
+      }
+
+      pollState();
+      setInterval(pollState, 10000);
     };
 
-    function saveCredentials() {
-      localStorage.setItem('cs_name', document.getElementById('codespaceName').value.trim());
-      localStorage.setItem('gh_token', document.getElementById('githubToken').value.trim());
-      LOG.innerText = "Credentials saved locally in your browser!";
+    function log(msg) {
+      document.getElementById('log').innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
     }
 
-    function getControlUrl() {
-      const csName = document.getElementById('codespaceName').value.trim();
-      return `https://${csName}-8080.app.github.dev`;
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      el.classList.add('active');
     }
 
-  async function getCodespaceState() {
+    function saveConfig() {
+      const cs = document.getElementById('codespaceName').value.trim();
       const token = document.getElementById('githubToken').value.trim();
-      const csName = document.getElementById('codespaceName').value.trim();
+      const addr = document.getElementById('playitAddress').value.trim();
+      const port = document.getElementById('playitPort').value.trim();
 
-      const res = await fetch(`https://api.github.com/user/codespaces/${csName}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
+      localStorage.setItem('cs_name', cs);
+      localStorage.setItem('gh_token', token);
+      localStorage.setItem('playit_addr', addr);
+      localStorage.setItem('playit_port', port);
+
+      updateAddressDisplay(addr);
+      document.getElementById('infoPort').innerText = port || '19132';
+      log("Configuration saved successfully!");
+    }
+
+    function updateAddressDisplay(addr) {
+      const display = addr || 'digbicks.ply.gg';
+      document.getElementById('displayDomain').innerText = display;
+      document.getElementById('infoAddress').innerText = display;
+      document.getElementById('sidebarServerName').innerText = display;
+    }
+
+    function copyText(id) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text);
+      log(`Copied '${text}' to clipboard!`);
+    }
+
+    async function getCodespaceState() {
+      const token = localStorage.getItem('gh_token');
+      const csName = localStorage.getItem('cs_name');
+      if (!token || !csName) return 'Unknown';
+
+      try {
+        const res = await fetch(`https://api.github.com/user/codespaces/${csName}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.state;
         }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return data.state;
-      }
+      } catch (e) {}
       return 'Unknown';
     }
 
-    async function controlCodespace(action) {
-      const token = document.getElementById('githubToken').value.trim();
-      const csName = document.getElementById('codespaceName').value.trim();
+    async function pollState() {
+      currentState = await getCodespaceState();
+      const statusBar = document.getElementById('statusBar');
+      const dot = document.getElementById('sidebarStatusDot');
+      const btn = document.getElementById('mainBtn');
+      const btnText = document.getElementById('mainBtnText');
 
-      if (!token || !csName) return alert("Please enter both your Codespace Name and GitHub Token!");
-
-      LOG.innerText = `Checking server state...`;
-      let currentState = await getCodespaceState();
-
-      if (action === 'start' && currentState !== 'Shutdown') {
-        if (currentState === 'Available') {
-          LOG.innerText = "Server is already running!";
-          return;
-        }
-        LOG.innerText = `Server state: '${currentState}'. Waiting for clean shutdown...`;
-        
-        while (currentState !== 'Shutdown') {
-          await new Promise(r => setTimeout(r, 5000));
-          currentState = await getCodespaceState();
-          LOG.innerText = `Server state: ${currentState}...`;
-        }
+      if (currentState === 'Available') {
+        statusBar.className = 'status-bar online';
+        statusBar.innerText = 'Online';
+        dot.style.background = 'var(--status-online)';
+        btn.className = 'btn-main stop';
+        btnText.innerText = 'Stop';
+        btn.disabled = false;
+      } else if (currentState === 'Shutdown') {
+        statusBar.className = 'status-bar offline';
+        statusBar.innerText = 'Offline';
+        dot.style.background = 'var(--status-offline)';
+        btn.className = 'btn-main start';
+        btnText.innerText = 'Start';
+        btn.disabled = false;
+      } else {
+        statusBar.className = 'status-bar starting';
+        statusBar.innerText = `State: ${currentState}`;
+        dot.style.background = 'var(--status-starting)';
+        btn.disabled = true;
       }
+    }
 
-      LOG.innerText = `Sending '${action}' command to GitHub API...`;
+    async function handlePowerAction() {
+      const token = localStorage.getItem('gh_token');
+      const csName = localStorage.getItem('cs_name');
+      if (!token || !csName) return alert("Please fill in your credentials under the Options tab first!");
+
+      const action = currentState === 'Available' ? 'stop' : 'start';
+      log(`Sending '${action}' command to GitHub API...`);
 
       try {
         const res = await fetch(`https://api.github.com/user/codespaces/${csName}/${action}`, {
@@ -138,19 +359,25 @@
         });
 
         if (res.ok) {
-          LOG.innerText = `Success: Server ${action} command sent! Give it 30s to finish booting.`;
+          log(`Command '${action}' sent successfully! Refreshing state...`);
+          setTimeout(pollState, 3000);
         } else {
           const err = await res.json();
-          LOG.innerText = `Error (${res.status}): ${err.message || 'Failed to execute command'}`;
+          log(`Error: ${err.message}`);
         }
       } catch (e) {
-        LOG.innerText = `Network Error: ${e.message}`;
+        log(`Network Error: ${e.message}`);
       }
+    }
+
+    function getControlUrl() {
+      const csName = localStorage.getItem('cs_name');
+      return `https://${csName}-8080.app.github.dev`;
     }
 
     async function callControlServer(endpoint, method = 'GET', body = null) {
       const baseUrl = getControlUrl();
-      LOG.innerText = `Connecting to server at ${endpoint}...`;
+      log(`Connecting to control engine at ${endpoint}...`);
 
       try {
         const options = { method, headers: {} };
@@ -161,11 +388,15 @@
 
         const res = await fetch(`${baseUrl}${endpoint}`, options);
         const data = await res.json();
-        LOG.innerText = data.message || JSON.stringify(data);
+        log(data.message || "Request successful");
         return data;
       } catch (e) {
-        LOG.innerText = "Server is offline or port 8080 is not set to Public.";
+        log("Control server offline or port 8080 is not set to Public.");
       }
+    }
+
+    async function triggerManualBackup() {
+      await callControlServer('/backup', 'POST');
     }
 
     async function loadBackups() {
@@ -182,30 +413,27 @@
       }
     }
 
-    async function restoreBackup() {
+    async function restoreSelectedBackup() {
       const hash = document.getElementById('backupList').value;
-      if (hash && confirm(`Are you sure you want to revert the world to commit ${hash}?`)) {
+      if (hash && confirm(`Revert world to commit ${hash}?`)) {
         await callControlServer('/restore', 'POST', { hash });
       }
     }
 
     async function uploadPack() {
       const fileInput = document.getElementById('packFile');
-      if (!fileInput.files[0]) return alert("Select a .mcpack or .zip file first!");
+      if (!fileInput.files[0]) return alert("Select a file first!");
 
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
 
-      LOG.innerText = "Uploading texture pack to Codespace...";
+      log("Uploading pack to server...");
       try {
-        const res = await fetch(`${getControlUrl()}/upload-pack`, {
-          method: 'POST',
-          body: formData
-        });
+        const res = await fetch(`${getControlUrl()}/upload-pack`, { method: 'POST', body: formData });
         const data = await res.json();
-        LOG.innerText = data.message || "Upload complete!";
+        log(data.message || "Upload complete!");
       } catch (e) {
-        LOG.innerText = `Upload Error: ${e.message}`;
+        log(`Upload Error: ${e.message}`);
       }
     }
   </script>
